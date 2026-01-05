@@ -1,51 +1,50 @@
 import 'package:flame/components.dart';
-import 'package:flame/sprite.dart';
-import 'package:flame/audio.dart';
+import 'package:flame/collisions.dart';
 import 'package:flutter/material.dart';
 
-/// A collectible item component for a platformer game.
-class Collectible extends SpriteComponent with CollisionCallbacks {
-  final int scoreValue;
-  final Audio _collectSound;
+class Collectible extends PositionComponent with CollisionCallbacks {
+  final int value;
+  double _floatOffset = 0;
 
-  /// Creates a new Collectible component.
-  ///
-  /// [sprite] is the sprite to be displayed for the collectible.
-  /// [position] is the initial position of the collectible.
-  /// [scoreValue] is the score value awarded when the collectible is collected.
-  /// [collectSound] is the audio to be played when the collectible is collected.
   Collectible({
-    required Sprite sprite,
     required Vector2 position,
-    required this.scoreValue,
-    required Audio collectSound,
-  })  : _collectSound = collectSound,
-        super(
+    this.value = 10,
+  }) : super(
           position: position,
-          size: Vector2.all(32.0),
-          sprite: sprite,
+          size: Vector2(30, 30),
+          anchor: Anchor.center,
         );
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    addCollision();
+    add(CircleHitbox());
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-    _handleCollect();
+  void update(double dt) {
+    super.update(dt);
+    
+    position.y += 80 * dt;
+    
+    _floatOffset += dt * 5;
+    position.x += (0.5 * ((_floatOffset % 2) < 1 ? 1 : -1));
+    
+    if (position.y > 900) {
+      removeFromParent();
+    }
   }
 
-  void _handleCollect() {
-    // Trigger score update and play collect sound
-    _collectSound.play();
+  @override
+  void render(Canvas canvas) {
+    canvas.drawCircle(
+      Offset(size.x / 2, size.y / 2),
+      size.x / 2,
+      Paint()..color = Colors.amber,
+    );
+  }
+
+  void collect() {
     removeFromParent();
-  }
-
-  /// Adds an optional animation to the collectible, such as spinning or floating.
-  void addAnimation() {
-    // Implement animation logic here
   }
 }
